@@ -14,6 +14,8 @@ struct OperationDefinitionTemplate {
     \(OperationDeclaration(operation.definition))
       \(DocumentType.render(operation.definition, fragments: operation.referencedFragments, apq: config.apqs))
 
+      \(section: VariableProperties(operation.definition.variables))
+
       public init() {}
 
       \(SelectionSetTemplate(schema: schema).render(for: operation))
@@ -67,6 +69,14 @@ struct OperationDefinitionTemplate {
       """
       )
     }
+  }
+
+  private func VariableProperties(
+    _ variables: [CompilationResult.VariableDefinition]
+  ) -> TemplateString {
+    """
+    \(variables.map { "public var \($0.name): \($0.type.rendered)"}, separator: "\n")
+    """
   }
 }
 
