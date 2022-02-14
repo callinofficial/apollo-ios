@@ -40,7 +40,7 @@ public class WebSocketTransport {
     case disconnected
     case connected
     case failed
-    
+
     var isConnected: Bool {
       self == .connected
     }
@@ -116,7 +116,7 @@ public class WebSocketTransport {
     self.clientVersion = clientVersion
     self.connectOnInit = connectOnInit
     self.addApolloClientHeaders(to: &self.websocket.request)
-    
+
     self.websocket.delegate = self
     if connectOnInit {
       self.websocket.connect()
@@ -145,6 +145,7 @@ public class WebSocketTransport {
 
       switch messageType {
       case .data,
+           .next,
            .error:
         if let id = parseHandler.id, let responseHandler = subscribers[id] {
           if let payload = parseHandler.payload {
@@ -185,6 +186,7 @@ public class WebSocketTransport {
 
       case .connectionInit,
            .connectionTerminate,
+           .subscribe,
            .start,
            .stop,
            .connectionError:
@@ -325,7 +327,7 @@ public class WebSocketTransport {
 
     self.reconnect.mutate { $0 = oldReconnectValue }
   }
-  
+
   /// Disconnects the websocket while setting the auto-reconnect value to false,
   /// allowing purposeful disconnects that do not dump existing subscriptions.
   /// NOTE: You will receive an error on the subscription (should be a `WebSocket.WSError` with code 1000) when the socket disconnects.
@@ -334,7 +336,7 @@ public class WebSocketTransport {
     self.reconnect.mutate { $0 = false }
     self.websocket.disconnect()
   }
-  
+
   /// Reconnects a paused web socket.
   ///
   /// - Parameter autoReconnect: `true` if you want the websocket to automatically reconnect if the connection drops. Defaults to true.
@@ -353,13 +355,13 @@ extension WebSocketTransport: NetworkTransport {
     contextIdentifier: UUID? = nil,
     callbackQueue: DispatchQueue = .main,
     completionHandler: @escaping (Result<GraphQLResult<Operation.Data>, Error>) -> Void) -> Cancellable {
-    
+
     func callCompletion(with result: Result<GraphQLResult<Operation.Data>, Error>) {
       callbackQueue.async {
         completionHandler(result)
       }
     }
-    
+
     if let error = self.error.value {
       callCompletion(with: .failure(error))
       return EmptyCancellable()
@@ -510,5 +512,5 @@ extension WebSocketTransport: WebSocketClientDelegate {
   public func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
     self.processMessage(data: data)
   }
-  
+
 }
